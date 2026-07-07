@@ -20,12 +20,30 @@
 (allow file-write* (subpath "/var/tmp"))
 (allow file-write* (subpath "/private/var/tmp"))
 (allow file-write* (subpath (param "TMP_DIR")))
+;; Editor state: nvim writes swap, ShaDa, undo, and plugin logs under
+;; ~/.local (state + share) and ~/.cache; other editors cache similarly.
+;; Without these, $EDITOR children of the agent hit E303/E886 and plugin
+;; load failures when launched from the sandboxed pi process.
+;;
+;; Narrowed to these two subpaths rather than the whole home: `subpath`
+;; matches recursively, so allowing HOME_DIR wholesale would also permit
+;; writes to ~/.ssh, ~/.zshrc, ~/Library/LaunchAgents (persistence), etc.
+;; — defeating the sandbox's write confinement. Add more subpaths here if
+;; a future tool needs them.
+;;
+;; sandbox-exec does not expand ~ or $HOME in profiles (the profile is not
+;; shell-parsed) and has no path-joining, so each writable subpath is
+;; passed as its own -D param from pi-sandbox, matching the
+;; WORK_DIR/TMP_DIR canonical-path convention.
+(allow file-write* (subpath (param "LOCAL_DIR")))
+(allow file-write* (subpath (param "CACHE_DIR")))
 ;; /dev is its own filesystem; allow writes there so shell redirections to
 ;; /dev/null, /dev/tty, etc. keep working. Reads already allowed by default.
 (allow file-write* (subpath "/dev"))
 
 ;; TODO (interview answers):
-;;   * Allow writes under $HOME for ~/.config, ~/.cache?       add a subpath.
+;;   * If an editor/tool writes under ~/.config (rare; nvim mostly reads it),
+;;     add a CONFIG_DIR param + allow here rather than re-widening to HOME.
 ;;   * Allow writes under ~/Library/Preferences (cfprefsd)?    add a subpath.
 ;;   * Restrict network to specific provider hosts?            add deny rules:
 ;;       (deny network-outbound (remote tcp) (require-not (remote tcp "api.anthropic.com:443")))
