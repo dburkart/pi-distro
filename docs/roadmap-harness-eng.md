@@ -45,8 +45,8 @@ everything below.
 
 ### H1. In-session todo tool  ✅ done
 
-**Shipped:** `agent/extensions/todo.ts` (`todo` tool + `/todos` command).
-See [extensions/todo.md](extensions/todo.md). State in tool-result details
+**Shipped:** `agent/extensions/todos/index.ts` (`todo` tool + `/todos` command).
+See [extensions/todos.md](extensions/todos.md). State in tool-result details
 (branches correctly); ephemeral scratchpad that complements the `plan` skill.
 
 **Basis:** Claude Code's `TodoWrite` (v0.2.93) and task system (v2.1.16) are
@@ -265,8 +265,8 @@ Recommended order, by evidence-to-effort, with cognition-track overlaps
 noted:
 
 1. **H1 todo tool** ✅ done — packaged `examples/todo.ts` as
-   `agent/extensions/todo.ts` (tool + `/todos` command; state in tool-result
-   details). Cleaner planning.
+   `agent/extensions/todos/index.ts` (tool + `/todos` command; state in
+   tool-result details). Cleaner planning.
 2. **H2 background shells** — `bg`/`bg_read`. ~1 day. Unblocks H3, H4, H6.
 3. **H3 test-loop tool** — wrap bash + parser. ~1 day. Biggest
    context-noise win.

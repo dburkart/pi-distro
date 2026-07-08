@@ -6,7 +6,7 @@ rewrite history. Cross-link to docs/ where the full rationale lives.
 ## 2026-07-08 — H1 in-session todo tool shipped (harness-eng track)
 
 Packaged pi's `examples/extensions/todo.ts` as
-`agent/extensions/todo.ts` (roadmap H1). [docs/extensions/todo.md](../../docs/extensions/todo.md)
+`agent/extensions/todos/index.ts` (roadmap H1). [docs/extensions/todos.md](../../docs/extensions/todos.md)
 documents it.
 
 Key design choices:
@@ -26,6 +26,12 @@ prune tool results, so todos are a scratchpad, not a plan store. The
 checklist. They compose. Deliberately did *not* rewrite the plan skill to
 use todos — that would conflate ephemeral + durable state and change the
 plan skill's contract; it's a separate follow-up if wanted.
+- **Directory extension, not single file.** Initially shipped as
+  `agent/extensions/todo.ts`; renamed to `agent/extensions/todos/index.ts`
+  to match the convention of the other extensions (memory/verify/web/terminal
+  are all `name/index.ts` dirs). The extension is still single-file internally
+  — `index.ts` — because it's self-contained; the directory form is for
+  consistency, not to enable splitting.
 - **Model-auto-invocable via `promptSnippet` + `promptGuidelines`**
 (matches verify/web/memory). Description carries positive + exclusion
 signals: use for multi-step task tracking; not for single-step edits; not a

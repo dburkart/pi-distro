@@ -87,3 +87,11 @@ Log:
     condition); must pass a jiti `alias` map pointing at the dist entry
     files, exactly as pi's own loader does (getAliases in loader.ts).
     Captured in lessons.md for the next extension packaging task.
+  - 2026-07-08: Renamed `agent/extensions/todo.ts` →
+    `agent/extensions/todos/index.ts` (and doc `todo.md` → `todos.md`) to
+    match the directory convention of the other extensions
+    (memory/verify/web/terminal are all `name/index.ts`). Single-file
+    internally still; the dir form is for consistency. Doc/memory refs
+    updated; upstream `examples/extensions/todo.ts` refs left as-is (that's
+    pi's actual example filename). Re-typechecked + re-smoke-tested clean
+    after the move.

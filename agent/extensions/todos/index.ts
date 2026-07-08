@@ -1,5 +1,5 @@
 /**
- * todo extension — in-session todo scratchpad (harness-eng roadmap H1).
+ * `todos` extension — in-session todo scratchpad (harness-eng roadmap H1).
  *
  * Registers the `todo` tool (model-auto-invocable) and `/todos` command.
  * State is stored in tool-result `details` (not external files), so todo
@@ -13,9 +13,9 @@
  * plans. Use it for "what am I doing right now"; use `plan` for state that
  * must survive compaction and cross-session resume.
  *
- * Based on pi's `examples/extensions/todo.ts`, packaged with auto-invocation
- * signals (promptSnippet + promptGuidelines) matching the verify/web/memory
- * extensions.
+ * Based on pi's `examples/extensions/todo.ts`, packaged as
+ * `agent/extensions/todos/index.ts` with auto-invocation signals (promptSnippet
+ * + promptGuidelines) matching the verify/web/memory extensions.
  */
 import { StringEnum } from "@earendil-works/pi-ai";
 import { type ExtensionAPI, type ExtensionContext, defineTool, type Theme } from "@earendil-works/pi-coding-agent";

@@ -1,6 +1,6 @@
 # Todo Extension
 
-`agent/extensions/todo.ts` adds a lightweight **in-session todo list** — a
+`agent/extensions/todos/` adds a lightweight **in-session todo list** — a
 `todo` tool (model-auto-invocable) and `/todos` command. It is a scratchpad
 for "what am I doing right now" on a multi-step task: add the steps up front,
 toggle each done as you finish, and progress stays out of prose and the
