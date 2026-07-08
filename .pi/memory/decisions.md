@@ -3,6 +3,37 @@
 Durable project decisions and the reasoning behind them. Append; don't
 rewrite history. Cross-link to docs/ where the full rationale lives.
 
+## 2026-07-08 — H1 in-session todo tool shipped (harness-eng track)
+
+Packaged pi's `examples/extensions/todo.ts` as
+`agent/extensions/todo.ts` (roadmap H1). [docs/extensions/todo.md](../../docs/extensions/todo.md)
+documents it.
+
+Key design choices:
+
+- **Single-file extension.** The example is one self-contained file (one
+tool + one command + one TUI component); extensions.md blesses single-file
+for small extensions. Other distro extensions are directories only because
+they're multi-file.
+- **State in tool-result `details`, not files.** This is the load-bearing
+choice: state rides the session tree as ordinary tool results, so todos
+branch correctly with the tree (fork/navigate → list is correct for that
+point in history). Reconstructed on `session_start`/`session_tree` by
+replaying the branch's `todo` results in order.
+- **Ephemeral, not durable — complements the `plan` skill.** Compaction may
+prune tool results, so todos are a scratchpad, not a plan store. The
+`plan` skill keeps durable plans in memory; `todo` keeps the in-the-moment
+checklist. They compose. Deliberately did *not* rewrite the plan skill to
+use todos — that would conflate ephemeral + durable state and change the
+plan skill's contract; it's a separate follow-up if wanted.
+- **Model-auto-invocable via `promptSnippet` + `promptGuidelines`**
+(matches verify/web/memory). Description carries positive + exclusion
+signals: use for multi-step task tracking; not for single-step edits; not a
+substitute for `plan`.
+- **`defineTool` + `pi.registerTool`** (the newer convention; verify/web).
+
+Next harness-eng item: H2 background shells.
+
 ## 2026-07-07 — Plan-before-execute skill shipped
 
 Implemented the roadmap's Tier-1 #1 item as the `plan` skill
@@ -29,8 +60,8 @@ Key design choices (resolved via a `/grilling` session):
 - **Plan pages carry `Status:`** so a fresh session can `memory search` for
   `Status: in-progress` and resume.
 
-Next roadmap item: #2 Checkpoint/rewind (the verify extension, #4 standalone
-form, has shipped).
+Next roadmap item: H2 background shells (the harness-eng track; H1 todo
+just shipped).
 
 ## 2026-07-07 — Roadmap split into two tracks (cognition + harness-eng)
 

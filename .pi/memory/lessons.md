@@ -71,5 +71,41 @@ with a tsconfig that sets `baseUrl` to the pi install
 and `paths` for the `@earendil-works/*` packages to their `dist/index.d.ts`,
 plus `typebox` → `node_modules/typebox/build/index.d.mts` (the typebox
 package only exposes `.mts` types via its `exports` map). `Theme` is not
-exported from `@earendil-works/pi-tui` — don't annotate render callbacks'
-`theme` param; let it infer from the `ToolDefinition` signature.
+exported from `@earendil-works/pi-tui` — don't annotate render callbacks'\`theme` param; let it infer from the `ToolDefinition` signature.
+
+## 2026-07-08 — jiti-loading an extension outside pi needs an alias map
+
+When smoke-testing an extension under jiti *outside* of pi's own loader
+(e.g. a standalone `node smoke.mjs` that imports the extension file), bare
+`require.resolve("@earendil-works/pi-ai")` / `"@earendil-works/pi-coding-agent"`
+**fails** with `ERR_PACKAGE_PATH_NOT_EXPORTED`: those packages have
+ESM-only `exports` maps with no `require` condition, so CJS resolution
+from an external context can't read them.
+
+pi's own loader sidesteps this by passing jiti an **`alias` map** pointing
+each `@earendil-works/*` and `typebox` specifier at its dist entry file
+(see `getAliases()` in `dist/core/extensions/loader.ts`). To replicate in a
+standalone smoke test, build the same alias map with these published-install
+targets (pi-coding-agent install root =
+`/Users/dburkart/homebrew/lib/node_modules/@earendil-works/pi-coding-agent`):
+
+- `@earendil-works/pi-coding-agent` → `<PI>/dist/index.js`
+- `@earendil-works/pi-tui` → `<PI>/node_modules/@earendil-works/pi-tui/dist/index.js`
+- `@earendil-works/pi-ai` → `<PI>/node_modules/@earendil-works/pi-ai/dist/compat.js`
+  (pi maps the pi-ai **root** to the **compat** entrypoint — a strict
+  superset of the core entrypoint)
+- `@earendil-works/pi-ai/compat` / `/oauth` → the corresponding dist files
+- `typebox` → `<PI>/node_modules/typebox/build/index.mjs`
+
+Then `createJiti(url, { alias, moduleCache: false })` and `jiti.import(path,
+{ default: true })`. This loads the extension's real factory and lets you
+drive `registerTool`/`registerCommand`/`on` against a stub `ExtensionAPI` to
+confirm it loads + registers without a provider — a cheap, provider-free
+smoke test. (For H1's todo tool this also let me exercise the
+`details`-reconstruction logic directly, validating the branching-correctness
+property.)
+
+The `Theme` caveat above still holds for *pi-tui*; but `Theme` **is**
+re-exported from `@earendil-works/pi-coding-agent` (`dist/index.d.ts` →
+`modes/interactive/theme/theme.ts`), so importing it from there (as the
+todo example does) typechecks fine.

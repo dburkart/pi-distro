@@ -37,13 +37,17 @@ prerequisites, and rough effort.
   `message_end` usage, `after_provider_response`, `bash` `spawnHook`) and
   the `examples/` tree.
 
-Implemented to date: none on this track (it is newly scoped). The
+Implemented to date: H1 (in-session todo tool). The
 cognition roadmap's shipped items — memory, plan, verify — compose with
 everything below.
 
 ## Tier 1 — cheap, high conciseness leverage
 
-### H1. In-session todo tool
+### H1. In-session todo tool  ✅ done
+
+**Shipped:** `agent/extensions/todo.ts` (`todo` tool + `/todos` command).
+See [extensions/todo.md](extensions/todo.md). State in tool-result details
+(branches correctly); ephemeral scratchpad that complements the `plan` skill.
 
 **Basis:** Claude Code's `TodoWrite` (v0.2.93) and task system (v2.1.16) are
 standard across SOTA harnesses. The distro's `plan` skill writes plans to
@@ -260,7 +264,9 @@ Lower priority — more workflow/convention than machinery.
 Recommended order, by evidence-to-effort, with cognition-track overlaps
 noted:
 
-1. **H1 todo tool** — package `examples/todo.ts`. ~1hr. Cleaner planning.
+1. **H1 todo tool** ✅ done — packaged `examples/todo.ts` as
+   `agent/extensions/todo.ts` (tool + `/todos` command; state in tool-result
+   details). Cleaner planning.
 2. **H2 background shells** — `bg`/`bg_read`. ~1 day. Unblocks H3, H4, H6.
 3. **H3 test-loop tool** — wrap bash + parser. ~1 day. Biggest
    context-noise win.

@@ -23,6 +23,10 @@ without recursively listing the tree.
   run that re-derives a claim from source and returns a structured verdict
   (confirmed/refuted/uncertain). Read-only investigation, distinct error state.
   Roadmap #4, standalone single-verifier form.
+- [extensions/todo.md](extensions/todo.md) — in-session todo scratchpad
+  (`todo` tool + `/todos` command); state stored in tool-result details so it
+  branches correctly with the session tree. Ephemeral — complements, does not
+  replace, the `plan` skill's durable memory plans. Roadmap H1.
 
 ## Skills
 
