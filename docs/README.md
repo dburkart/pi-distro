@@ -18,3 +18,10 @@ without recursively listing the tree.
   covering factual + experiential memory, with write-time conflict detection
   and a lint pass. Grounded in the memory-systems survey, pruned to what's
   practical on hosted models.
+
+## Roadmap
+
+- [roadmap.md](roadmap.md) — unimplemented high-value items from the
+  long-horizon-agent and memory-systems research, ordered by
+  evidence-to-effort (plan skill, checkpoint/rewind, sub-agents, verification,
+  memory evolution). Includes what's explicitly deferred and why.
