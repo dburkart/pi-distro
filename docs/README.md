@@ -10,3 +10,6 @@ without recursively listing the tree.
   `review` tool; shared "secondary buffer" primitive for suspending pi's TUI
   and running a foreground program (e.g. `$EDITOR`). Includes the sandbox
   rationale for `~/.local`/`~/.cache` writes.
+- [extensions/web.md](extensions/web.md) — `web_search` and `web_fetch` tools
+  with a pluggable search backend registry (Marginalia implemented); env-var
+  configuration and HTML-to-text fetching.
