@@ -19,3 +19,10 @@ Append-only chronological record. Parse with:
      plans/verify-extension. Both are legitimate distinct roadmap items
      (H1 vs cognition #4); the slug pattern plans/*-extension is shared but
      the content is unrelated. Kept both deliberately. -->
+## [2026-07-08] project/write  | plans/bg-extension | created
+## [2026-07-08] project/update | decisions
+## [2026-07-08] project/update | plans/bg-extension
+## [2026-07-08] project/update | plans/bg-extension
+## [2026-07-08] project/update | lessons
+## [2026-07-08] project/update | plans/bg-extension
+## [2026-07-08] project/update | plans/bg-extension

@@ -98,12 +98,15 @@ targets (pi-coding-agent install root =
 - `typebox` → `<PI>/node_modules/typebox/build/index.mjs`
 
 Then `createJiti(url, { alias, moduleCache: false })` and `jiti.import(path,
-{ default: true })`. This loads the extension's real factory and lets you
-drive `registerTool`/`registerCommand`/`on` against a stub `ExtensionAPI` to
+{ default: true })`. Note the return shape: with `{ default: true }`, the
+resolved value **is** the default export itself (the factory function), not
+`{ default: fn }` — so use `const factory = typeof mod === "function" ? mod : mod.default;`.
+This loads the extension's real factory and lets you drive `registerTool`/`registerCommand`/`on` against a stub `ExtensionAPI` to
 confirm it loads + registers without a provider — a cheap, provider-free
 smoke test. (For H1's todo tool this also let me exercise the
 `details`-reconstruction logic directly, validating the branching-correctness
-property.)
+property; for H2's `bg` tool it let me exercise real detached-spawn/poll/stop/
+shutdown-cleanup against `node:child_process`.)
 
 The `Theme` caveat above still holds for *pi-tui*; but `Theme` **is**
 re-exported from `@earendil-works/pi-coding-agent` (`dist/index.d.ts` →

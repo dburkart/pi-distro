@@ -40,6 +40,61 @@ substitute for `plan`.
 
 Next harness-eng item: H2 background shells.
 
+## 2026-07-08 — H2 background shells designed (via /grilling)
+
+Roadmap H2, `bg` tool + `/bg` command. Design resolved through a `/grilling`
+pass; see [plans/bg-extension](../.pi/memory/plans/bg-extension.md) for the
+full plan. Key decisions:
+
+- **Detached process backend, no tmux.** stdout/stderr piped to files under a
+  per-process `$TMPDIR/pi-bg-<random>/` dir; in-memory handle table. The
+  distro is deliberately tmux-free; tmux-as-optional-backend deferred.
+  Portability (an AGENTS.md principle) drove this.
+- **Fully ephemeral, session-runtime-scoped.** Kill all live children on
+  *every* `session_shutdown` (quit/reload/new/resume/fork); handle table
+  in-memory, not persisted. No PID reattachment (fragile: PID reuse, dead
+  processes, tmpdir cleanup). Matches the `todos` ephemeral precedent; the
+  `plan` skill is the durable layer, not bg.
+- **Poll model, not push.** `bg read` returns status + tails; optional `wait`
+  (cap 120s) blocks for completion/new output then returns. Push via
+  `pi.sendMessage` deferred — its session-message coupling and interruption
+  semantics are a v2 concern. Matches Codex/Claude `TaskOutput` precedent.
+- **Separate stdout/stderr files, paths exposed.** `bg read` returns tails
+  (cheap status peek); the *full* log lives in inspectable files whose paths
+  are in every result, so the model `grep`s/`read`s/`tail`s via existing tools.
+  Files cleaned *only* on `session_shutdown` (not on `stop`) — supports the
+  stop-then-grep test-loop pattern.
+- **Single `bg` tool, `action` enum (start/read/list/stop)** — not separate
+  `bg`/`bg_read`/`bg_list`/`bg_stop` tools. Mirrors the `todos` enum pattern;
+  the context-footprint argument is load-bearing on this track (4 tools where
+  1 suffices is exactly the noise this track removes). Claude's separate-tool
+  precedent is a weak signal here — this distro is deliberately leaner.
+- **`start`:** `command` req, `cwd` opt (default `ctx.cwd`), `timeout` opt
+  seconds (no default), `PI_BG_MAX_LIFETIME` env ceiling (default 1800s)
+  clamps explicit timeouts and kills over-lifetime shells. Env-var pattern
+  matches verify (`PI_VERIFY_TIMEOUT`).
+- **`read`:** `handle` req, `wait` opt (0, max 120), `lines` opt (50, max 500),
+  `stream` opt (stdout|stderr|both, default both). Tail-from-end, no offset
+  tracking (files are the full record; offset is ephemeral anyway).
+- **`stop`:** SIGTERM → 3s grace → SIGKILL; leaves output files. `list`
+  returns all session handles with status (running/stopped/exited code).
+- **Auto-backgrounding OUT of scope for v1** (bg is model-invoked only).
+  Briefly pulled in then walked back as scope bloat — it would require the
+  `bg` extension to own the `bash` tool's execute path (spawnHook can't see a
+  running process mid-flight; tool_call can't take over execution), which is
+  more risk than the rest of H2 combined. Tracked as a deferred enhancement
+  on the roadmap.
+- **Incrementing-integer handles** per session (`#1`, `#2`, …), never reused.
+- **`/bg` human command in v1**, mirroring `/todos` (read-only status panel).
+- **Auto-invocation signals:** positive = "long-running *and* you want to keep
+  working"; exclusion = quick/blocking → `bash`, plus ephemerality warning
+  (killed on reload/switch/quit). promptSnippet + 2 promptGuidelines bullets.
+
+Composes with H3 (test-loop: run tests in bg, poll) and H5 (spawn pattern can
+be extracted to a shared lib when the sub-agent orchestrator lands).
+
+Next harness-eng item: H3 test-loop tool.
+
 ## 2026-07-07 — Plan-before-execute skill shipped
 
 Implemented the roadmap's Tier-1 #1 item as the `plan` skill

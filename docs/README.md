@@ -27,6 +27,10 @@ without recursively listing the tree.
   (`todo` tool + `/todos` command); state stored in tool-result details so it
   branches correctly with the session tree. Ephemeral — complements, does not
   replace, the `plan` skill's durable memory plans. Roadmap H1.
+- [extensions/bg.md](extensions/bg.md) — background shells / async bash
+  (`bg` tool + `/bg` command); runs long commands detached with stdout/stderr
+  piped to inspectable files, polled via `bg read`. Ephemeral, killed on
+  `/reload`/session-switch/quit. Auto-backgrounding deferred. Roadmap H2.
 
 ## Skills
 

@@ -37,7 +37,7 @@ prerequisites, and rough effort.
   `message_end` usage, `after_provider_response`, `bash` `spawnHook`) and
   the `examples/` tree.
 
-Implemented to date: H1 (in-session todo tool). The
+Implemented to date: H1 (in-session todo tool), H2 (background shells). The
 cognition roadmap's shipped items — memory, plan, verify — compose with
 everything below.
 
@@ -67,7 +67,30 @@ holding plan state in prose.
 **Effort:** Small (~1 hour). The example is essentially done; this is
 packaging, a skill prompt tweak, and a doc.
 
-### H2. Background shells / async bash
+### H2. Background shells / async bash  ✅ done
+
+**Shipped:** `agent/extensions/bg/index.ts` (`bg` tool + `/bg` command).
+See [extensions/bg.md](extensions/bg.md). Single `bg` tool with an `action`
+enum (`start`/`read`/`list`/`stop`) — mirroring the `todos` enum pattern, not
+four separate tools (context-footprint discipline). Detached `child_process`
+spawn (own process group) with stdout/stderr piped to separate files under a
+per-process `$TMPDIR/pi-bg-<id>/` dir; `bg read` returns a cheap status tail
+and the file paths, so the model `grep`s/`read`s the full log with existing
+tools. Fully ephemeral: in-memory handle table, SIGKILL all children +
+remove tmpdir on every `session_shutdown`. `stop` = SIGTERM→3s→SIGKILL,
+leaves files (stop-then-grep). Env vars `PI_BG_MAX_LIFETIME` (default 1800s),
+`PI_BG_DISABLED`.
+
+**Deferred enhancement — auto-backgrounding:** Claude Code auto-backgrounds
+long `bash` calls (a `bash` exceeding a threshold returns a `bg` handle
+instead of blocking). Out of scope for v1 (`bg` is model-invoked only):
+it would require the `bg` extension to *own the `bash` tool's execute path*
+(`spawnHook` only adjusts command/cwd/env before spawn; `tool_call` can't
+take over execution; `BashOperations.exec` is blocking-until-exit and yields
+no PID), which is more risk than the rest of H2 combined and would change
+the `bash` tool's contract. Revisit if the "model accidentally blocks on a
+slow command" problem surfaces in practice; the answer then may be the model
+learning to use `bg` earlier, or H3's test-loop tool.
 
 **Basis:** Codex "background shells" are the central operational lever in
 the harness-eng essay — the team retooled their entire build to <1 minute
@@ -267,7 +290,11 @@ noted:
 1. **H1 todo tool** ✅ done — packaged `examples/todo.ts` as
    `agent/extensions/todos/index.ts` (tool + `/todos` command; state in
    tool-result details). Cleaner planning.
-2. **H2 background shells** — `bg`/`bg_read`. ~1 day. Unblocks H3, H4, H6.
+2. **H2 background shells** ✅ done — `bg`/`bg_read`-style as a single
+   `bg` tool with `action` enum (`start`/`read`/`list`/`stop`) in
+   `agent/extensions/bg/index.ts`. Detached spawn + file-piped stdout/stderr
+   + ephemeral handle table. Auto-backgrounding deferred (would require
+   owning `bash` execute). Composes with H3.
 3. **H3 test-loop tool** — wrap bash + parser. ~1 day. Biggest
    context-noise win.
 4. **H4 git-checkpoint + `/pr`** — package git examples + worktree skill.
