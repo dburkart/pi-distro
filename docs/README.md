@@ -18,6 +18,11 @@ without recursively listing the tree.
   covering factual + experiential memory, with write-time conflict detection
   and a lint pass. Grounded in the memory-systems survey, pruned to what's
   practical on hosted models.
+- [extensions/verify.md](extensions/verify.md) — independent adversarial
+  verifier (`verify` tool + `/verify` command); spawns an isolated headless pi
+  run that re-derives a claim from source and returns a structured verdict
+  (confirmed/refuted/uncertain). Read-only investigation, distinct error state.
+  Roadmap #4, standalone single-verifier form.
 
 ## Skills
 

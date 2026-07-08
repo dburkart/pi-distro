@@ -15,6 +15,13 @@ Implemented to date:
   `plan` skill: light brainstorm → durable plan in memory → living-contract
   execution. Escalates to `/grilling` on high-stakes signals; resumes
   in-progress plans after compaction.
+- **Independent verifier** ([extensions/verify.md](extensions/verify.md)) —
+  the `verify` tool + `/verify` command: spawns an isolated headless pi run
+  that re-derives a claim from source and returns a structured verdict
+  (confirmed/refuted/uncertain). Standalone single-verifier form of #4.
+  Shipped ahead of #2 by user direction. Notable correction: the real
+  isolation primitive is the headless child `pi` spawn, NOT
+  `ctx.newSession`/`ctx.fork` (those are session-replacement primitives).
 
 ## Tier 1 — highest leverage, lowest effort
 
@@ -59,11 +66,13 @@ context multiplication (total work far exceeds one window) and separation
 of concerns (exploration context stays isolated; lead agent focuses on
 synthesis).
 
-**Shape:** A sub-agent extension using `ctx.newSession({ withSession })` /
-`ctx.fork(entryId, { withSession })` to run isolated work in a fresh session
-and return a distilled summary. The orchestrator could be a tool the LLM
-calls (`delegate`) or a command. Sub-agents should write durable results to
-the memory extension so they survive even if the sub-session is discarded.
+**Shape:** A sub-agent extension that spawns isolated headless `pi` runs
+(same primitive the `verify` extension uses: `pi --mode json -p --no-session`),
+NOT `ctx.newSession`/`ctx.fork` (those are session-replacement primitives
+that tear down the user's active session — see [extensions/verify.md](extensions/verify.md)).
+The orchestrator could be a tool the LLM calls (`delegate`) or a command.
+Sub-agents should write durable results to the memory extension so they
+survive even if the sub-session is discarded.
 
 **Prerequisites:** Memory extension (shipped) so sub-agents have somewhere
 durable to hand off. Checkpoint/rewind (#2) desirable so sub-agent failures
@@ -87,6 +96,14 @@ runs an independent check — re-reading the relevant files, re-running tests,
 or posing counterfactuals. Could be a specialization of the sub-agent
 extension (#3). The antagonists framing: spawn N verifiers with distinct
 critique lenses rather than one self-grading pass.
+
+**Status:** The **standalone single-verifier form is shipped** as the
+`verify` extension ([extensions/verify.md](extensions/verify.md)). It spawns
+an isolated headless `pi` run (the real isolation primitive — note this
+corrects the earlier suggestion to use `ctx.newSession`/`ctx.fork`, which are
+session-replacement primitives, not isolated-sub-agent ones). The
+multi-verifier antagonist ensemble remains open and would build on the
+sub-agent orchestrator (#3).
 
 **Prerequisites:** Sub-agent architecture (#3) for the multi-verifier
 version. A single-verifier `verify` tool is buildable standalone.
@@ -192,7 +209,7 @@ The recommended order, by evidence-to-effort:
 1. **Plan skill** (#1) — cheap same-day win. ✅ Done.
 2. **Checkpoint/rewind** (#2) — leverages pi's unique tree substrate.
 3. **Single-verifier `verify` tool** (#4, standalone form) — modest build,
-   meaningful reliability gain.
+   meaningful reliability gain. ✅ Done (shipped ahead of #2 by user direction).
 4. **Sub-agent orchestrator** (#3) — unlocks #4's antagonist form and is the
    natural substrate for complex delegation.
 5. Memory evolution items (#5–#7) — only as observed failures demand them.
