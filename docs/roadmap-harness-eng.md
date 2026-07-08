@@ -37,7 +37,8 @@ prerequisites, and rough effort.
   `message_end` usage, `after_provider_response`, `bash` `spawnHook`) and
   the `examples/` tree.
 
-Implemented to date: H1 (in-session todo tool), H2 (background shells). The
+Implemented to date: H1 (in-session todo tool), H2 (background shells), H3
+(test/CI loop). The
 cognition roadmap's shipped items — memory, plan, verify — compose with
 everything below.
 
@@ -114,7 +115,7 @@ mechanically straightforward; the design work is the tool surface (what the
 LLM sees, how completion is signaled) and portability (tmux optional vs
 required).
 
-### H3. Test/CI loop as a first-class tool
+### H3. Test/CI loop as a first-class tool  ✅ done
 
 **Basis:** The harness-eng essay's central invariant: keep the inner loop
 under one minute, and when it breaches, treat that as a signal to decompose

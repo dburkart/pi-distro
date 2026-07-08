@@ -3,6 +3,64 @@
 Durable project decisions and the reasoning behind them. Append; don't
 rewrite history. Cross-link to docs/ where the full rationale lives.
 
+## 2026-07-08 — H3 test-loop tool designed (via /grilling)
+
+Roadmap H3, `test` tool + `/test` command. Design resolved through a
+`/grilling` pass (12 questions, Q1–Q12); see
+[plans/test-extension](../.pi/memory/plans/test-extension.md) for the full
+plan. Key decisions:
+
+- **Action enum `run` + `parse`, not two tools or a parser-only layer.** `run`
+  execs synchronously + parses (owns the spawn — the common <1min inner-loop
+  path); `parse` distills existing output (the `bg`→`test` handoff for long
+  suites). Only `run` spawns; `bg` stays the background runner — no spawn
+  duplication, no premature shared-spawn-lib. Mirrors the track's enum
+  precedent (`todos`, `bg`).
+- **Config: env > `.pi/test.json` > auto-detect.** `PI_TEST_COMMAND` /
+  `PI_TEST_PARSER` env (portability, matches `verify`/`bg`/`memory`) override a
+  project file `{command, parser}` which overrides auto-detection. Test
+  command is genuinely *project* metadata, so a project file beats env-only.
+- **Auto-detection *is* the parser registry.** Each parser is
+  `{name, detect(manifestCtx), parse(output): Summary}`; "add a framework" =
+  drop in a registered object. Probe order: `package.json` (sniff
+  `scripts.test` content → node/jest/vitest) → `Cargo.toml` (cargo) → `go.mod`
+  (go) → `Makefile` (generic) → error.
+- **v1 parsers: jest/vitest, cargo, go, node(TAP), generic.** The grilling's
+  v1 set (jest/vitest + cargo + go + Makefile-generic) had no parser that fits
+  the *distro repo itself* (manifest-less, jiti-loaded TS) — and the user
+  explicitly asked for tests on this repo that exercise the tool. So a `node`
+  parser was added, parsing **TAP** from `node --test --test-reporter=tap`
+  (version-stable across Node 20–25; parser grounded in real captured
+  non-TTY output, which is what `test` always sees since it pipes to a file).
+  Logged as a living-contract scope expansion.
+- **Return contract: compact summary to context + full log to a
+  `$TMPDIR/pi-test-<id>/output.log` file, path exposed.** Matches `bg`
+  verbatim — the summary is the lean always-present view; the file is the
+  escape hatch for stack traces (model `read`/`grep`s it, no re-run).
+- **Nonzero exit = `status: fail`, never a thrown error.** Failing tests are
+  the tool's happy path; tool errors reserved for can't-run (no command,
+  parser mismatch). `PI_TEST_TIMEOUT` default 120s → breach kills + returns
+  `status: timeout` — the timeout *is* the nudge to switch to `bg`+`parse`
+  for long suites (encodes the essay's <1min invariant as a machine signal).
+- **`parse` input: `file` OR `text`; optional `parser` override** (default =
+  detected/configured). `file` is the load-bearing zero-noise `bg` handoff;
+  `text` covers in-context output (bash run, paste, fetched CI log). Override
+  handles the cross-project/fetched-log case.
+- **`run` accepts a full `command` override; parser resolved separately.**
+  Subset/filter runs (`jest path/to/file`, `cargo test --test foo`) without
+  falling back to `bash` (which would lose parsing). No `args`-append —
+  framework arg grammars differ; a blind append is a footgun.
+- **`/test` command: stateless one-shot run + TUI summary panel** (Esc to
+  close), mirroring `/bg`. Track consistency; the human gets the distilled
+  view. No last-result cache (would add hidden state for modest convenience).
+- **Auto-invocation: positive + exclusion calibrated.** Positive: compact
+  summary for the project's test suite, multi-test runs, iterative fix loops.
+  Exclusion: one-off/non-test/raw → `bash`; long suites → `bg`+`test parse`.
+
+Composes with H2 (long suites via `bg` + `test parse`) and the distro's own
+`node --test` suite (`.pi/test.json` exercises the config-file path; the repo
+has no manifest so auto-detect yields to the config file).
+
 ## 2026-07-08 — H1 in-session todo tool shipped (harness-eng track)
 
 Packaged pi's `examples/extensions/todo.ts` as

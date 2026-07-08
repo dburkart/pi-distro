@@ -112,3 +112,43 @@ The `Theme` caveat above still holds for *pi-tui*; but `Theme` **is**
 re-exported from `@earendil-works/pi-coding-agent` (`dist/index.d.ts` →
 `modes/interactive/theme/theme.ts`), so importing it from there (as the
 todo example does) typechecks fine.
+
+## 2026-07-08 — node:test gotchas: `test`-dir discovery collision + NODE_TEST_CONTEXT inheritance
+
+Two reusable traps hit while building the H3 `test` extension + the distro's
+`node:test` suite:
+
+1. **`node --test` (bare, no args) treats *any* directory named `test` or
+   `tests` as a test dir and runs its contents as tests** — it does not only
+   match `*.test.*` filenames. So in this repo, bare `node --test` from the
+   root grabbed `agent/extensions/test/index.ts` (the extension source) and
+   tried to run it as a test (→ failure). **Fix:** invoke `node --test` with
+   an explicit file glob (`tests/extensions/*.test.mjs`), never bare, when
+   there's a directory named `test`/`tests` anywhere under cwd that isn't a
+   test dir. This is why `.pi/test.json` uses the explicit glob.
+
+2. **`node --test` sets `NODE_TEST_CONTEXT` in the env, and a child `node
+   --test` spawned with the parent's env inherits it → runs as a
+   sub-reporter (writes nothing to stdout, exits 0) instead of an
+   independent runner.** This bit the `test` tool's `runCommand` when a test
+   inside the suite spawned `node --test` (the child produced empty TAP +
+   exit 0, so the parser saw a phantom "pass"). **Fix:** strip
+   `NODE_TEST_CONTEXT` from the child env before spawning a nested
+   `node --test`. This is a real general fix (any nested `node --test`),
+   not just a test artifact — done in `runCommand`.
+
+3. **Self-referential recursion:** a `node:test` file that runs the repo's
+   own suite via the `test` tool (`action:run`, which spawns `node --test
+   tests/...`) recursurses infinitely — the suite runs the test that runs
+   the suite. Prove end-to-end paths from a *standalone script outside
+   `tests/`* with a `command` override pointing at a throwaway `/tmp` suite,
+   or have integration tests run throwaway suites in `/tmp`. Never put a
+   "run the repo suite via the tool" test inside `tests/`.
+
+Also: `cargo test` and `go test` could not run in this sandbox (cargo's
+linker is broken on this machine; `go` writes to `~/Library/Caches/go-build`
+which the sandbox denies). Only `node --test` works here — so the distro's
+own runner is `node:test`, and the jest/vitest/cargo/go parsers are
+fixture-tested (representative recorded output), not live-tested. Ground the
+`node`/TAP parser in real captured non-TTY output (which is what a tool that
+pipes to a file always sees).

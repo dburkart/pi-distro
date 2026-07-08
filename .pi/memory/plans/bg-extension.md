@@ -1,6 +1,6 @@
 # bg-extension — Roadmap H2: background shells / async bash
 
-Status: in-progress
+Status: done
 Goal: Ship a `bg` tool (+ `/bg` command) that runs long commands detached in the
 background, pipes stdout/stderr to inspectable files, and lets the model poll
 status/output while continuing to work — removing the "blocked on stdout"

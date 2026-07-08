@@ -31,6 +31,12 @@ without recursively listing the tree.
   (`bg` tool + `/bg` command); runs long commands detached with stdout/stderr
   piped to inspectable files, polled via `bg read`. Ephemeral, killed on
   `/reload`/session-switch/quit. Auto-backgrounding deferred. Roadmap H2.
+- [extensions/test.md](extensions/test.md) — test/CI loop as a first-class
+  tool (`test` tool + `/test` command); runs the project's test command and
+  returns a compact pass/fail summary (counts + failing-test names) instead
+  of raw stdout, full log on disk. Config via env/`.pi/test.json`/auto-detect
+  with a per-framework parser registry (node/jest/vitest/cargo/go/generic).
+  Pairs with `bg` for long suites. Roadmap H3.
 
 ## Skills
 
