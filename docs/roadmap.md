@@ -11,26 +11,12 @@ Implemented to date:
   — the `memory` tool, `/memory` command, pointer injection, write-time
   conflict detection, lint. Covers factual + experiential memory in a flat
   markdown store.
+- **Plan-before-execute skill** ([skills/plan.md](skills/plan.md)) — the
+  `plan` skill: light brainstorm → durable plan in memory → living-contract
+  execution. Escalates to `/grilling` on high-stakes signals; resumes
+  in-progress plans after compaction.
 
 ## Tier 1 — highest leverage, lowest effort
-
-### 1. Plan-before-execute skill
-
-**Basis:** Every source agrees a dedicated planning/brainstorm pass beats
-inline ad-hoc reasoning. Claude Code and Codex planning modes show large
-gains when enabled. Anthropic's "deep agents" framing makes planning a
-first-class phase for long-horizon work.
-
-**Shape:** A skill (not an extension) that enforces a short brainstorm →
-plan → execute phase before long tasks. Progressive disclosure: the skill's
-description is always in context; the full workflow loads on demand. Should
-write the plan to memory (`decisions.md` / a `plan.md` page) so it survives
-across sessions and compaction — composing directly with the memory
-extension already shipped.
-
-**Prerequisites:** None beyond the memory extension (already shipped).
-
-**Effort:** Small (~1 hour). A `SKILL.md` under `agent/skills/`.
 
 ### 2. Checkpoint / rewind
 
@@ -203,7 +189,7 @@ failures.
 
 The recommended order, by evidence-to-effort:
 
-1. **Plan skill** (#1) — cheap same-day win.
+1. **Plan skill** (#1) — cheap same-day win. ✅ Done.
 2. **Checkpoint/rewind** (#2) — leverages pi's unique tree substrate.
 3. **Single-verifier `verify` tool** (#4, standalone form) — modest build,
    meaningful reliability gain.

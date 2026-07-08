@@ -19,6 +19,13 @@ without recursively listing the tree.
   and a lint pass. Grounded in the memory-systems survey, pruned to what's
   practical on hosted models.
 
+## Skills
+
+- [skills/plan.md](skills/plan.md) — `plan` skill: plan-before-execute
+  phase for long tasks. Brainstorm lightly → write a durable plan to memory
+  → execute against it as a living contract. Escalates to `/grilling` on
+  high-stakes signals; resumes in-progress plans after compaction.
+
 ## Roadmap
 
 - [roadmap.md](roadmap.md) — unimplemented high-value items from the
