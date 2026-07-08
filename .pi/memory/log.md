@@ -9,3 +9,4 @@ Append-only chronological record. Parse with:
 ## [2026-07-07] project/update | plans/verify-extension
 ## [2026-07-07] project/update | plans/verify-extension
 ## [2026-07-07] project/update | lessons
+## [2026-07-07] project/write  | research/gap-analysis-sota-harnesses | created

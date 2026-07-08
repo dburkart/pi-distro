@@ -1,9 +1,18 @@
-# Roadmap
+# Roadmap — Agent Cognition
 
 High-value, unimplemented items indicated by the long-horizon agent and
-memory-systems research. Ordered by evidence-to-effort ratio. Each item lists
-its research basis, concrete shape, prerequisites, and a rough effort
-estimate.
+memory-systems research: how the agent *thinks* across long horizons
+(memory, planning, verification, rewind, sub-agents). Ordered by
+evidence-to-effort ratio. Each item lists its research basis, concrete shape,
+prerequisites, and a rough effort estimate.
+
+> **Companion track:** [roadmap-harness-eng.md](roadmap-harness-eng.md)
+> covers the *execution-substrate* gaps surfaced by SOTA harness
+> engineering (background shells, test loops, git lifecycle, observability).
+> The two tracks overlap on three items — sub-agent orchestration,
+> checkpoint/rewind, and diff-oriented review — which are cross-linked where
+> they appear. The gap analysis itself lives in project memory at
+> `research/gap-analysis-sota-harnesses`.
 
 Implemented to date:
 

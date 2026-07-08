@@ -31,9 +31,23 @@ without recursively listing the tree.
   → execute against it as a living contract. Escalates to `/grilling` on
   high-stakes signals; resumes in-progress plans after compaction.
 
-## Roadmap
+## Research
 
-- [roadmap.md](roadmap.md) — unimplemented high-value items from the
-  long-horizon-agent and memory-systems research, ordered by
-  evidence-to-effort (plan skill, checkpoint/rewind, sub-agents, verification,
-  memory evolution). Includes what's explicitly deferred and why.
+- (memory) `research/gap-analysis-sota-harnesses` — gap analysis vs.
+  SOTA harnesses (Claude Code, Codex/Symphony) grounded in the harness-eng
+  essay. Identifies 9 gaps; the basis for `roadmap-harness-eng.md`.
+
+## Roadmaps
+
+Two tracks with different research lineages, cross-linked where they
+overlap (sub-agent orchestration, checkpoint/rewind, diff-oriented review):
+
+- [roadmap-cognition.md](roadmap-cognition.md) — *how the agent thinks*
+  across long horizons: memory, planning, verification, rewind, sub-agents,
+  memory evolution. From the long-horizon-agent + memory-systems research.
+- [roadmap-harness-eng.md](roadmap-harness-eng.md) — *how the agent does
+  work concisely*: background shells, test loops, git/PR lifecycle,
+  diff-review, skill-distillation flywheel, observability. From SOTA
+  harness-engineering research (Lopopolo essay, Claude Code analysis).
+  Nearly every item reduces context-window noise — the lever for concise
+  implementations.

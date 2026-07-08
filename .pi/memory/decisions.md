@@ -32,6 +32,34 @@ Key design choices (resolved via a `/grilling` session):
 Next roadmap item: #2 Checkpoint/rewind (the verify extension, #4 standalone
 form, has shipped).
 
+## 2026-07-07 — Roadmap split into two tracks (cognition + harness-eng)
+
+Researched SOTA coding harnesses (Lopopolo "Harness Engineering" essay +
+OpenAI Frontier/Symphony; Agent Safehouse's Claude Code v2.1.39 analysis)
+against this distro. Findings persisted to project memory at
+`research/gap-analysis-sota-harnesses`. The research surfaced a distinct set
+of gaps (background shells, test-loop tool, in-session todo, git/PR
+lifecycle, diff-oriented review, skill-distillation flywheel, observability)
+that the existing `roadmap.md` — grounded in long-horizon-agent +
+memory-systems research — didn't cover, plus reframings of three overlapping
+items (sub-agents, checkpoint/rewind, verification).
+
+**Decision: rename + new doc, not a merged rewrite.** The two tracks have
+different research lineages and orientations (how the agent *thinks* vs. how
+it *does work concisely*); merging would dilute both. Renamed
+`docs/roadmap.md` → `docs/roadmap-cognition.md` (title "Roadmap — Agent
+Cognition"), added `docs/roadmap-harness-eng.md` in the same doc style.
+Cross-linked at the top of each; the three overlapping items are linked
+where they appear (H5↔cognition #3, H4↔#2, H6↔#4). `docs/README.md` "Roadmap"
+section became "Roadmaps" indexing both. The unifying lever for the
+harness-eng track is *context-window noise reduction* — the path to more
+concise implementations.
+
+Key substrate finding: pi already ships working `examples/extensions/` for
+several harness-eng gaps (subagent, todo, git-checkpoint, git-merge-and-resolve,
+auto-commit-on-exit, bash-spawn-hook). Several items are "package and polish,"
+not build-from-scratch.
+
 ## 2026-07-07 — verify extension designed (via /grilling)
 
 Roadmap #4, standalone single-verifier form. **Shipped.**
