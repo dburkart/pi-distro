@@ -13,3 +13,8 @@ without recursively listing the tree.
 - [extensions/web.md](extensions/web.md) — `web_search` and `web_fetch` tools
   with a pluggable search backend registry (Marginalia implemented); env-var
   configuration and HTML-to-text fetching.
+- [extensions/memory.md](extensions/memory.md) — persistent cross-session agent
+  memory as markdown (`memory` tool + `/memory` command); flat file-based store
+  covering factual + experiential memory, with write-time conflict detection
+  and a lint pass. Grounded in the memory-systems survey, pruned to what's
+  practical on hosted models.
