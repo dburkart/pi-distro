@@ -192,8 +192,12 @@ export default function (pi: ExtensionAPI) {
 		if (!(await isGitRepo(ctx.cwd))) return;
 		const leafId = ctx.sessionManager.getLeafId();
 		if (!leafId) return;
-		// Nothing to rewind to if the tree is clean.
-		if (await worktreeClean(ctx.cwd)) return;
+		// Always capture, even when the tree is clean: a clean tree at prompt
+		// time still has a rewind target (HEAD), and the agent's subsequent
+		// edits are what get rewound. When clean, write-tree returns HEAD's
+		// tree SHA (always reachable, never gc'd, dedup'd by git). Skipping
+		// clean trees would break rewind for the most common starting condition
+		// (first prompt of a session, or right after a commit).
 		const sha = await captureTreeSHA(ctx.cwd);
 		if (!sha) return;
 		checkpoints.set(leafId, sha);

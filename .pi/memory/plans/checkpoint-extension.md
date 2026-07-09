@@ -136,3 +136,28 @@ Log:
     working-tree state directly. Dropping the seed also makes capture work
     in repos with NO commits (no HEAD). Smaller, more general. Logged as a
     living-contract refinement.
+  - LIVING-CONTRACT FIX during live-test setup: the grilling's "skip
+    capture when the worktree is clean (nothing to rewind to)" decision was
+    WRONG. A clean tree at prompt time still has a rewind target (HEAD), and
+    the agent's subsequent edits are what get rewound. Skipping clean trees
+    broke rewind for the most common starting condition (first prompt of a
+    session, or right after a commit) — verified via a simulation: clean at
+    prompt A → no checkpoint captured → fork back to A → restore is a no-op
+    → agent's edits NOT rewound. Fix: ALWAYS capture, even when clean. When
+    clean, write-tree returns HEAD's tree SHA (always reachable, never gc'd,
+    dedup'd by git), so rewind-to-a-clean-prompt correctly reverts the
+    agent's edits back to HEAD. Cost is trivial (one dedup'd object + one
+    small session entry per prompt; todos stores comparable entries per
+    action). Updated the test (clean-tree now asserts capture happens), the
+    doc, and this plan. The grilling's reasoning confused "clean tree" with
+    "nothing to rewind" — clean means "rewind target is HEAD," not "no
+    target."
+  - Known limitation surfaced during live-test setup (NOT fixed — deliberate
+    tradeoff): read-tree -u --reset reverts tracked-file mods + deletions but
+    LEAVES untracked files. So agent-created files from the rewound turn
+    persist after restore (the intruder-safe default from grilling). This is
+    the safe choice (won't delete user's genuinely-new files) but means a
+    full byte-exact rewind requires a manual `git clean -fd`. A targeted
+    clean (remove untracked files not in the checkpoint tree, with a second
+    prompt) is a possible enhancement but riskier — deferred. Documented in
+    the live-test walkthrough.

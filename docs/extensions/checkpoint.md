@@ -72,8 +72,11 @@ fragility rationale that made `bg` ephemeral does not transfer.
 
 - **Capture** on `before_agent_start` (once per prompt), keyed by the
   user-message leaf entry — the natural "rewind to when I sent this prompt"
-  target. Skipped when the worktree is clean (nothing to rewind to) or when
-  `cwd` is not a git repo.
+  target. Always captures, even when the worktree is clean: a clean tree at
+  prompt time still has a rewind target (HEAD), and the agent's subsequent
+  edits are what get rewound (when clean, `write-tree` returns HEAD's tree
+  SHA, which is always reachable and never gc'd). Skipped only when `cwd`
+  is not a git repo.
 - **Restore** on `session_before_fork` *and* `session_before_tree` (both
   rewind the conversation; the file-state mismatch is identical). Only when
   the current working-tree SHA **differs** from the target checkpoint

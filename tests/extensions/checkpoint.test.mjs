@@ -198,14 +198,18 @@ test("before_agent_start: captures dirty tree + appends a pi-checkpoint entry ke
 	}
 });
 
-test("before_agent_start: skips capture when the worktree is clean (no entry appended)", async () => {
+test("before_agent_start: captures even when the worktree is clean (rewind-to-HEAD)", async () => {
+	// Clean at prompt time still has a rewind target (HEAD); the agent's
+	// subsequent edits are what get rewound. So we always capture.
 	const { d, cleanup } = gitRepo((_, s) => s("printf x > a.txt && git add -A && git commit -qm i"));
 	const { pi, appended, events } = makeStub();
 	try {
 		factory(pi);
 		const { ctx } = makeCtx(d);
 		await events.before_agent_start({}, ctx);
-		assert.equal(appended.length, 0, "clean tree → no checkpoint");
+		assert.equal(appended.length, 1, "clean tree still captures (rewind-to-HEAD)");
+		assert.match(appended[0].data.treeSHA, /^[0-9a-f]{40}$/i);
+		assert.equal(await treeExists(d, appended[0].data.treeSHA), true);
 	} finally {
 		cleanup();
 	}
