@@ -3,6 +3,68 @@
 Durable project decisions and the reasoning behind them. Append; don't
 rewrite history. Cross-link to docs/ where the full rationale lives.
 
+## 2026-07-09 — H4a git checkpoint designed (via /grilling)
+
+Roadmap H4 cheap form, pure-passive `checkpoint` extension. Design resolved
+through a `/grilling` pass (Q1–Q7); see
+[plans/checkpoint-extension](../.pi/memory/plans/checkpoint-extension.md).
+Key decisions:
+
+- **Split H4: checkpoint now (H4a), `/pr` later (H4b).** The two layers share
+  no code/events (passive event-driven extension vs. on-demand orchestration
+  skill); bundling dilutes both. Matches the one-focused-tool-per-pass track
+  precedent (H2/H3/verify).
+- **Primitive: tree-object, NOT stash.** The roadmap/example's `git stash
+  create` is broken for rewind: verified that `stash create` does NOT capture
+  untracked files (the stash commit tree contains only tracked files; no
+  third parent), and `stash apply` ABORTS on a dirty tree. Since the agent's
+  primary mutation is *creating* files, stash can't rewind them. The
+  tree-object model captures everything: temp `GIT_INDEX_FILE` → `read-tree
+  HEAD` → `git add -A` (tracked + untracked + deletions, respects .gitignore)
+  → `git write-tree` → dangling tree SHA (real index untouched); restore via
+  `git read-tree -u --reset <tree>` (overwrites index+worktree; leaves
+  post-snapshot untracked "intruder" files — the safe default; agent-rolled-
+  back files removed as snapshot deletions). Cost: one gc-able dangling
+  object per checkpoint. The patch-series idea (user-proposed) captures
+  untracked but has brittle restore (`git apply` needs matching index/worktree
+  preconditions; fails on diverged trees even after a reset-to-HEAD preamble)
+  — rejected. The worktree-per-turn idea is the elegant long-term
+  architecture but needs an upstream pi change (mutable cwd —
+  `ExtensionContext.cwd` is readonly, no setter; verified) + sandbox
+  re-scoping + per-turn commits; deferred as the upgrade path if git
+  checkpoints prove insufficient (== the roadmap's cognition-#2 tree-rewind
+  reservation).
+- **Restore on BOTH `session_before_fork` AND `session_before_tree`.** Both
+  rewind the conversation; the file-state mismatch is identical. Hooking only
+  fork leaves tree-navigation with a stale tree — a confusing asymmetry.
+- **Restore behavior: prompt-on-mismatch** (`ctx.ui.select`), only when
+  current-tree-SHA ≠ target-checkpoint-SHA (no prompt on no-op navigation);
+  non-interactive mode skips restore. Navigation is often read-only, so
+  silent auto-restore is too magic for a file-rewriting safety net.
+  Data-safety: snapshot-current-first (refresh `checkpoint[currentLeafId]` to
+  actual current SHA) before any `read-tree --reset`, so nothing is silently
+  lost.
+- **Cadence: `before_agent_start`, keyed by the user-message leaf entry**
+  (one `write-tree` per prompt; maps to "rewind to when I sent this prompt").
+  NOT `turn_start` (the example) — mid-loop states aren't real navigation
+  targets and multiply captures; NOT per-edit (overkill, no edit-granularity
+  entries to navigate to).
+- **State: persist via `pi.appendEntry("pi-checkpoint", {entryId, treeSHA,
+  ts})`** — the purpose-built session-persistence primitive (not sent to
+  LLM). Reconstruct on `session_start`/`session_tree` by scanning
+  `type:"custom"` entries (the `todos` pattern); validate each SHA with
+  `git cat-file -e` on load. Survives /reload + /resume, forks with the tree;
+  compaction may prune (same caveat `todos` ships with). More durable than
+  `bg`'s pure-ephemeral — justified: git tree SHAs are stable content
+  addresses, not reuse-prone PIDs.
+- **Surface: pure-passive — no tool, no command.** The model shouldn't drive
+  its own safety net (footgun); the restore prompt is the visible part; a
+  `/checkpoints` command is deferred until the manual-restore need surfaces.
+
+Composes with `todos` (same reconstruct-from-custom-entries pattern) and the
+future H4b `/pr` (worktree strategy decided there). Next harness-eng item:
+H4b `/pr` skill.
+
 ## 2026-07-08 — H3 test-loop tool designed (via /grilling)
 
 Roadmap H3, `test` tool + `/test` command. Design resolved through a

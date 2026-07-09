@@ -37,6 +37,13 @@ without recursively listing the tree.
   of raw stdout, full log on disk. Config via env/`.pi/test.json`/auto-detect
   with a per-framework parser registry (node/jest/vitest/cargo/go/generic).
   Pairs with `bg` for long suites. Roadmap H3.
+- [extensions/checkpoint.md](extensions/checkpoint.md) — git working-tree
+  checkpoint/rewind safety net (roadmap H4a, cheap form). Pure-passive: no
+  tool, no command. Snapshots the working tree into a git tree object before
+  each agent loop and offers to restore files to the checkpoint on
+  `/fork`/tree-navigation (which rewind the conversation but not the files).
+  Tree-object primitive (not stash — stash can't capture untracked files);
+  state persisted via custom session entries; `PI_CHECKPOINT_DISABLED`.
 
 ## Skills
 

@@ -33,3 +33,7 @@ Append-only chronological record. Parse with:
 ## [2026-07-08] project/update | plans/test-extension
 ## [2026-07-08] project/update | plans/test-extension
 ## [2026-07-08] project/update | lessons
+## [2026-07-09] project/write  | plans/checkpoint-extension | created
+## [2026-07-09] project/update | decisions
+## [2026-07-09] project/update | plans/checkpoint-extension
+## [2026-07-09] project/update | plans/checkpoint-extension

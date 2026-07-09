@@ -38,7 +38,7 @@ prerequisites, and rough effort.
   the `examples/` tree.
 
 Implemented to date: H1 (in-session todo tool), H2 (background shells), H3
-(test/CI loop). The
+(test/CI loop), H4a (git checkpoint). The
 cognition roadmap's shipped items — memory, plan, verify — compose with
 everything below.
 
@@ -139,28 +139,54 @@ add others on demand.
 
 ### H4. Git checkpoint + PR lifecycle
 
+**H4a (cheap form) ✅ done.** Shipped: `agent/extensions/checkpoint/`
+(`checkpoint` extension, pure-passive — no tool, no command). See
+[extensions/checkpoint.md](extensions/checkpoint.md). Snapshots the working
+tree into a git **tree object** (not stash) before each agent loop
+(`before_agent_start`), keyed by the user-message leaf, and offers to
+restore files to the checkpoint on `/fork` **and** tree-navigation — both
+rewind the conversation but not the files, which is the gap this closes.
+State persisted via `pi.appendEntry` custom session entries (reconstructed
++ validated on load, forks with the tree, compaction-may-prune — same
+caveat as `todos`). Restore is prompt-on-mismatch (`ctx.ui.select`),
+snapshot-current-first for data safety; non-interactive skips.
+
+**Design note — why not stash:** the roadmap/example's `git stash create`
+is broken for rewind: verified that `stash create` does **not** capture
+untracked files (the agent's primary mutation is *creating* files) and
+`stash apply` aborts on a dirty tree. The tree-object primitive (temp
+`GIT_INDEX_FILE` → `git add -A` → `git write-tree`; restore via
+`git read-tree -u --reset`) captures tracked + untracked + deletions,
+respects `.gitignore`, works in repos with no commits, and leaves
+post-snapshot untracked intruders alone (safe default). The worktree-per-
+turn model is the elegant long-term architecture but needs an upstream pi
+change (mutable cwd — `ExtensionContext.cwd` is readonly); deferred as the
+upgrade path if git checkpoints prove insufficient (== cognition #2 tree-rewind). Design resolved via `/grilling` (Q1–Q7).
+
+**H4b (full `/pr` skill) — deferred.** A `/pr` skill: create a worktree,
+push, `gh pr create`, watch CI (composes with H2/H3), surface failures,
+drive fixes, merge. Mirrors Claude Code's bundled `commit-commands` and
+`pr-review-toolkit` plugins. The worktree strategy and CI-watch loop
+(harder, riskier decisions: worktree-per-PR vs in-place, `bg`+`test`
+polling vs `gh run watch`, autonomy in driving fixes) deserve their own
+grilling+plan, so H4 was split. The cheap checkpoint landed and proved
+first.
+
 **Basis:** The essay frames full PR-lifecycle delegation (push, wait for CI,
 fix flakes, merge queue, repeat) as "what it means to delegate fully."
 Claude Code has worktree support, `gh` PR create/review, commit
 co-authoring, and session↔PR linking (v2.1.27). The cheap form —
 auto-checkpoint per turn — is a pure safety net.
 
-**Shape:** Two layers.
-- **Cheap:** Package `examples/git-checkpoint.ts` (auto-commit/stash per
-  turn) as the always-on safety net. This is the practical form of the
-  cognition roadmap's #2 (checkpoint/rewind) — git-level, not tree-level.
-- **Full:** A `/pr` skill: create a worktree, push, `gh pr create`, watch CI
-  (composes with H2/H3), surface failures, drive fixes, merge. Mirrors
-  Claude Code's bundled `commit-commands` and `pr-review-toolkit` plugins.
+**Prerequisites:** H2/H3 helpful for the CI-watching layer of H4b. Overlaps
+[cognition #2 checkpoint/rewind](roadmap-cognition.md) — the cheap git form
+(H4a) is now shipped; tree-rewind reserved for when git checkpoints prove
+insufficient.
 
-**Prerequisites:** H2/H3 helpful for the CI-watching layer. Overlaps
-[cognition #2 checkpoint/rewind](roadmap-cognition.md) — recommend doing
-the cheap git form first and reserving tree-rewind for when git checkpoints
-prove insufficient.
-
-**Effort:** Cheap form ~half a day (package the example). Full `/pr` skill
-medium (1-2 days); the worktree + gh mechanics are standard, the design
-work is the CI-watch loop and failure surfacing.
+**Effort:** Cheap form ~half a day (packaged the example, reworked stash →
+tree-object). Full `/pr` skill medium (1-2 days); the worktree + gh
+mechanics are standard, the design work is the CI-watch loop and failure
+surfacing.
 
 ### H5. Sub-agent orchestrator
 
@@ -298,9 +324,10 @@ noted:
    owning `bash` execute). Composes with H3.
 3. **H3 test-loop tool** — wrap bash + parser. ~1 day. Biggest
    context-noise win.
-4. **H4 git-checkpoint + `/pr`** — package git examples + worktree skill.
-   ~1-2 days. Cheap form is the practical cognition-#2 checkpoint; full
-   `/pr` delegates the boring loop.
+4. **H4 git-checkpoint + `/pr`** — H4a (cheap git checkpoint) ✅ done
+   (`agent/extensions/checkpoint/`, tree-object primitive, prompt-on-
+   mismatch restore). H4b (full `/pr` skill) deferred to its own pass; the
+   worktree/CI-watch decisions belong there. ~1-2 days for H4b.
 5. **H5 sub-agent orchestrator** — package `examples/subagent` + contract.
    ~2-3 days. *Converges with cognition #3.* Unlocks H6.
 6. **H6 diff-review skill** — verify-on-diff with N lenses. ~1 day after
