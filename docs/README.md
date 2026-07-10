@@ -43,7 +43,7 @@ without recursively listing the tree.
   each agent loop and offers to restore files to the checkpoint on
   `/fork`/tree-navigation (which rewind the conversation but not the files).
   Tree-object primitive (not stash — stash can't capture untracked files);
-  state persisted via custom session entries; `PI_CHECKPOINT_DISABLED`.
+  in-memory (ephemeral) map; `PI_CHECKPOINT_DISABLED`.
 
 ## Skills
 

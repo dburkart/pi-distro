@@ -161,3 +161,37 @@ Log:
     clean (remove untracked files not in the checkpoint tree, with a second
     prompt) is a possible enhancement but riskier — deferred. Documented in
     the live-test walkthrough.
+  - MAJOR LIVING-CONTRACT DIVERGENCE (found in live test, Q6 overturned): the
+    `pi.appendEntry` persistence decision was WRONG and broke restore. Two
+    intertwined bugs surfaced when the user /forked and got no restore prompt:
+    (1) KEYING: at `before_agent_start` the session leaf is the PRIOR turn's
+    last entry L (pi persists the user message only at `message_end`, which
+    fires AFTER all earlier extension events — verified in agent-session.js:
+    line 818 emitBeforeAgentStart runs before line ~309 appendMessage). So
+    capture keyed to getLeafId() = L, but `/fork` (default position "before"
+    on a user message U) passes entryId = U.id. U was never a capture key →
+    lookup returned undefined → no restore → no prompt.
+    (2) appendEntry BREAKS THE FIX: the natural fix for (1) is resolve
+    U -> U.parentId (== L). But `pi.appendEntry` inserts a custom entry as a
+    child of the leaf and ADVANCES THE LEAF, so U.parentId becomes the
+    checkpoint entry, not L. The session file confirmed this: checkpoint
+    32afafe1 was keyed to entryId 4b91ac74 — the PREVIOUS checkpoint entry,
+    not the user message. So appendEntry persistence is incompatible with
+    correct parentId resolution.
+    FIX: dropped appendEntry entirely; the map is now in-memory (ephemeral),
+    matching `bg`'s precedent. Capture stays at before_agent_start (the only
+    point provably awaited before the agent edits files — `_emit` is
+    synchronous and agent events arrive via `subscribe`, so capturing at
+    message_start(assistant) where leaf==U would race with tool calls).
+    Restore resolves the fork/navigate target via direct lookup, falling back
+    to target.parentId. This means /reload clears the map (rewind to
+    pre-reload points unavailable until next prompt re-captures); forked/
+    resumed sessions re-capture fresh. Persistence via a non-inserting
+    scratch file (no tree node) is a deferred enhancement. Q6's reasoning
+    ("git SHAs are stable, not reuse-prone PIDs, so persist") was right about
+    the *objects* but missed that the persistence *mechanism* (appendEntry)
+    corrupts the keying. Updated extension, tests (18/18), doc, README,
+    roadmap. The grilling's "verify before_agent_start leaf-timing in build"
+    assumption is the one that bit — it was wrong, and the fallback note
+    ("turn_start") would ALSO have been wrong (turn_start has the same
+    prior-leaf timing).

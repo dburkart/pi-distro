@@ -52,42 +52,53 @@ Cost: one gc-able dangling tree object per checkpoint. It doesn't appear in
 > captures untracked but has brittle restore — `git apply` needs matching
 > index/worktree preconditions and fails on diverged trees.
 
-## State: session-persistent via custom entries
+## State: in-memory (ephemeral)
 
-The `entryId → treeSHA` map is persisted with `pi.appendEntry` (custom
-session entries, **not sent to the LLM** — the purpose-built persistence
-primitive). On `session_start` / `session_tree` the map is reconstructed by
-scanning the branch's custom entries, and each SHA is validated with
-`git cat-file -e` so a garbage-collected object is dropped cleanly. This
-survives `/reload` and `/resume` and **forks correctly with the session
-tree** (custom entries are children of the leaf, so a fork inherits the
-checkpoints on its branch). Compaction may prune them — the same caveat the
-`todos` extension ships with.
+The `leafId → treeSHA` map is in-memory only. It is **not** persisted via
+`pi.appendEntry`: that primitive inserts a custom entry as a child of the
+leaf and advances the leaf, which would interpose a session node between a
+turn's leaf (`L`) and the next user message (`U`) — breaking the
+`U.parentId == L` link that restore relies on (below). So a `/reload`
+clears the map (rewind to pre-reload points is unavailable until the next
+prompt re-captures); forked/resumed sessions re-capture fresh. Persistence
+via a non-inserting scratch file is a deferred enhancement. This mirrors
+the `bg` extension's ephemeral precedent.
 
-This is more durable than `bg`'s purely-ephemeral model. The justification:
-git tree SHAs are stable content addresses, not reuse-prone PIDs, so the
-fragility rationale that made `bg` ephemeral does not transfer.
+### Why capture keys to the leaf, not the user message
+
+pi persists the user message only at `message_end`, which fires *after* all
+earlier extension events in the turn — so the leaf at `before_agent_start`
+is the prior turn's last entry (`L`), not the user message (`U`) being
+submitted. `/fork` (default position `"before"` on a user message) passes
+`U.id`; since `U` is appended as a child of `L`, resolving `U →
+U.parentId` recovers `L`. `before_agent_start` is the capture point (not
+`message_start`(assistant), where the leaf would be `U` directly) because
+only `before_agent_start` is provably awaited before the agent edits files
+— pi's `_emit` is synchronous and agent events arrive via `subscribe`, so a
+capture during streaming would race with tool calls.
 
 ## Behavior
 
 - **Capture** on `before_agent_start` (once per prompt), keyed by the
-  user-message leaf entry — the natural "rewind to when I sent this prompt"
-  target. Always captures, even when the worktree is clean: a clean tree at
+  session leaf at that moment (the prior turn's last entry `L`; see
+  above). Always captures, even when the worktree is clean: a clean tree at
   prompt time still has a rewind target (HEAD), and the agent's subsequent
   edits are what get rewound (when clean, `write-tree` returns HEAD's tree
   SHA, which is always reachable and never gc'd). Skipped only when `cwd`
   is not a git repo.
 - **Restore** on `session_before_fork` *and* `session_before_tree` (both
-  rewind the conversation; the file-state mismatch is identical). Only when
-  the current working-tree SHA **differs** from the target checkpoint
-  (no prompt on a no-op navigation). The user is prompted
+  rewind the conversation; the file-state mismatch is identical). The fork/
+  navigate target entry id is resolved to a checkpoint via direct lookup,
+  falling back to `target.parentId` (to recover `L` from a user-message
+  target `U`). Only when the current working-tree SHA **differs** from the
+  target checkpoint (no prompt on a no-op navigation). The user is prompted
   (`ctx.ui.select`); navigation is often read-only, so silent auto-restore
   would be too magic for a thing that rewrites files. **Non-interactive mode
   skips restore** (no human to ask).
 - **Data safety:** before any restore, the *current* state is snapshotted
-  too (a rescue checkpoint keyed to the current leaf, via the same
-  `appendEntry` path) so nothing is silently lost — including manual edits
-  that drifted the tree off the last checkpoint.
+  too (a rescue checkpoint keyed to the current leaf) so nothing is
+  silently lost — including manual edits that drifted the tree off the last
+  checkpoint.
 
 After restore, index = worktree = snapshot (the correct semantic; `git
 status` will show the snapshot's diff vs `HEAD` as staged — expected, not a

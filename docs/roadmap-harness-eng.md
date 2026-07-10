@@ -143,13 +143,18 @@ add others on demand.
 (`checkpoint` extension, pure-passive — no tool, no command). See
 [extensions/checkpoint.md](extensions/checkpoint.md). Snapshots the working
 tree into a git **tree object** (not stash) before each agent loop
-(`before_agent_start`), keyed by the user-message leaf, and offers to
+(`before_agent_start`), keyed by the session leaf at that moment, and offers
 restore files to the checkpoint on `/fork` **and** tree-navigation — both
 rewind the conversation but not the files, which is the gap this closes.
-State persisted via `pi.appendEntry` custom session entries (reconstructed
-+ validated on load, forks with the tree, compaction-may-prune — same
-caveat as `todos`). Restore is prompt-on-mismatch (`ctx.ui.select`),
-snapshot-current-first for data safety; non-interactive skips.
+The fork/navigate target is resolved to a checkpoint via direct lookup,
+falling back to `target.parentId` (pi persists the user message only at
+`message_end`, after earlier extension events, so the leaf at
+`before_agent_start` is the prior turn's last entry `L`, and `/fork` passes
+the user message `U` whose `parentId` is `L`). The `leafId → treeSHA` map
+is in-memory only (ephemeral) — NOT persisted via `pi.appendEntry`, which
+interposes a session node that would break the `U.parentId == L` link.
+Restore is prompt-on-mismatch (`ctx.ui.select`), snapshot-current-first
+for data safety; non-interactive skips.
 
 **Design note — why not stash:** the roadmap/example's `git stash create`
 is broken for rewind: verified that `stash create` does **not** capture
